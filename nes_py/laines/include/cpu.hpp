@@ -5,6 +5,7 @@
 #include "common.hpp"
 #include "joypad.hpp"
 #include "cartridge.hpp"
+class PPU;
 #include "ppu.hpp"
 
 /// Processor flags
