@@ -184,10 +184,6 @@ public:
     /// Access PPU through registers.
     template <bool write> u8 access(u16 index, u8 v = 0);
 
-    // TODO: delete? these are created in the source and raise compiler error
-    // template u8 access<0>(u16, u8);
-    // template u8 access<1>(u16, u8);
-
     /// Calculate graphics addresses
     u16 nt_addr();
     /// Calculate graphics addresses
