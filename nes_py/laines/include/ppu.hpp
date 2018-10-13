@@ -3,6 +3,7 @@
 #include "common.hpp"
 #include "gui.hpp"
 #include "cartridge.hpp"
+#include "palette.inc"
 
 /// Scanline configuration options
 enum Scanline  { VISIBLE, POST, NMI, PRE };
@@ -106,8 +107,9 @@ union Addr {
     unsigned r : 15;
 };
 
-/// A structure to contain all local variables of a PPU for state backup
-struct PPUState {
+/// an instance of the Picture Processing Unit (PPU)
+class PPU {
+private:
     /// Mirroring mode
     Mirroring mirroring;
     /// VRAM for name-tables
@@ -120,86 +122,108 @@ struct PPUState {
     Sprite oam[8], secOam[8];
     /// Video buffer
     u32 pixels[256 * 240];
+
     /// Loopy V, T
     Addr vAddr, tAddr;
     /// Fine X
     u8 fX;
     /// OAM address
     u8 oamAddr;
+
     /// PPUCTRL   ($2000) register
     Ctrl ctrl;
     /// PPUMASK   ($2001) register
     Mask mask;
     /// PPUSTATUS ($2002) register
     Status status;
+
     /// Background latches:
     u8 nt, at, bgL, bgH;
     /// Background shift registers:
     u8 atShiftL, atShiftH; u16 bgShiftL, bgShiftH;
     bool atLatchL, atLatchH;
+
     /// Rendering counters:
     int scanline, dot;
     bool frameOdd;
 
-    /// Initialize a new PPU State
-    PPUState() {
-        frameOdd = false;
-        scanline = dot = 0;
-        ctrl.r = mask.r = status.r = 0;
-        memset(pixels, 0x00, sizeof(pixels));
-        memset(ciRam,  0xFF, sizeof(ciRam));
-        memset(oamMem, 0x00, sizeof(oamMem));
-    }
+    /// the GUI this PPU has access to
+    GUI* gui;
 
-    /// Initialize a new PPU State as a copy of another
-    PPUState(PPUState* state) {
-        mirroring = state->mirroring;
-        std::copy(std::begin(state->ciRam), std::end(state->ciRam), std::begin(ciRam));
-        std::copy(std::begin(state->cgRam), std::end(state->cgRam), std::begin(cgRam));
-        std::copy(std::begin(state->oamMem), std::end(state->oamMem), std::begin(oamMem));
-        std::copy(std::begin(state->oam), std::end(state->oam), std::begin(oam));
-        std::copy(std::begin(state->secOam), std::end(state->secOam), std::begin(secOam));
-        std::copy(std::begin(state->pixels), std::end(state->pixels), std::begin(pixels));
-        vAddr = state->vAddr;
-        tAddr = state->tAddr;
-        fX = state->fX;
-        oamAddr = state->oamAddr;
-        ctrl = state->ctrl;
-        mask = state->mask;
-        status = state->status;
-        nt = state->nt;
-        at = state->at;
-        bgL = state->bgL;
-        bgH = state->bgH;
-        atShiftL = state->atShiftL;
-        atShiftH = state->atShiftH;
-        bgShiftL = state->bgShiftL;
-        bgShiftH = state->bgShiftH;
-        atLatchL = state->atLatchL;
-        atLatchH = state->atLatchH;
-        scanline = state->scanline;
-        dot = state->dot;
-        frameOdd = state->frameOdd;
-    }
-};
+    /// the cartridge this PPU uses for game data
+    Cartridge* cartridge;
 
-/// The Picture Processing Unit
-namespace PPU {
+public:
+    /// Initialize a new PPU.
+    PPU();
 
-    /// Set the GUI instance pointer to a new value.
-    void set_gui(GUI* new_gui);
+    /// Initialize a new PPU as a copy of another PPU.
+    PPU(PPU* ppu);
 
-    /// Return the pointer to this PPU's GUI instance
-    GUI* get_gui();
+    void set_gui(GUI* new_gui) { gui = new_gui; };
+    GUI* get_gui() { return gui; };
 
-    /// Set the Cartridge instance pointer to a new value.
-    void set_cartridge(Cartridge* new_cartridge);
+    void set_cartridge(Cartridge* new_cartridge) { cartridge = new_cartridge; };
+    Cartridge* get_cartridge() { return cartridge; };
 
-    /// Return the pointer to this PPU's Cartridge instance
-    Cartridge* get_cartridge();
+    /// Set the PPU to the given mirroring mode.
+    void set_mirroring(Mirroring mode) { mirroring = mode; };
 
+    /// Get CIRAM address according to mirroring.
+    u16 nt_mirror(u16 addr);
+
+    bool rendering() { return mask.bg || mask.spr; };
+    int spr_height() { return ctrl.sprSz ? 16 : 8; };
+
+    /// Read an address from PPU memory.
+    u8 rd(u16 addr);
+
+    /// Write a byte to PPU memory.
+    void wr(u16 addr, u8 v);
+
+    /// Access PPU through registers.
     template <bool write> u8 access(u16 index, u8 v = 0);
-    void set_mirroring(Mirroring mode);
+
+    // TODO: delete? these are created in the source and raise compiler error
+    // template u8 access<0>(u16, u8);
+    // template u8 access<1>(u16, u8);
+
+    /// Calculate graphics addresses
+    u16 nt_addr();
+    /// Calculate graphics addresses
+    u16 at_addr();
+    /// Calculate graphics addresses
+    u16 bg_addr();
+
+    /// Increment the horizontal scroll by one pixel
+    void h_scroll();
+
+    /// Increment the vertical scroll by one pixel
+    void v_scroll();
+
+    /// Copy horizontal scrolling data from loopy T to loopy V
+    void h_update();
+
+    /// Copy vertical scrolling data from loopy T to loopy V
+    void v_update();
+
+    /// Put new data into the shift registers
+    void reload_shift();
+
+    /// Clear secondary OAM
+    void clear_oam();
+
+    /// Fill secondary OAM with the sprite infos for the next scanline
+    void eval_sprites();
+
+    /// Load the sprite info into primary OAM and fetch their tile data.
+    void load_sprites();
+
+    /// Process a pixel, draw it if it's on screen
+    void pixel();
+
+    /// Execute a cycle of a scanline
+    template<Scanline s> void scanline_cycle();
 
     /// Execute a PPU cycle.
     void step();
@@ -207,9 +231,4 @@ namespace PPU {
     /// Reset the PPU to a blank state.
     void reset();
 
-    /// Return a new PPU state of the PPU variables
-    PPUState* get_state();
-
-    /// Restore the PPU variables from a saved state
-    void set_state(PPUState* state);
-}
+};
