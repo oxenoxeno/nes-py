@@ -1,5 +1,3 @@
-#include <cstring>
-#include "cpu.hpp"
 #include "ppu.hpp"
 
 PPU::PPU() {

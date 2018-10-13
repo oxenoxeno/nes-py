@@ -1,8 +1,10 @@
 #pragma once
 #include <iostream>
+#include <cstring>
 #include "common.hpp"
 #include "gui.hpp"
 #include "cartridge.hpp"
+#include "cpu.hpp"
 #include "palette.inc"
 
 /// Scanline configuration options
