@@ -9,8 +9,9 @@
 class PPU;
 #include "ppu.hpp"
 
-// Addressing mode
-typedef u16 (*Mode)(void);
+class CPU;
+/// the addressing mode as a callable function
+typedef u16 (CPU::*Mode)(void);
 
 /// The CPU (MOS6502) for the NES
 class CPU {
@@ -161,26 +162,26 @@ public:
     /* STx */
     template<Mode m> void st(u8& r);
 
-    template<u8& r, Mode m> void ld()  { u16 a = m(); u8 p = rd(a); upd_nz(r = p);                  };  // LDx
-    template<u8& r, Mode m> void cmp() { u16 a = m(); u8 p = rd(a); upd_nz(r - p); P[C] = (r >= p); };  // CMP, CPx
+    template<Mode m> void ld(u8& r)  { u16 a = (this->*m)(); u8 p = rd(a); upd_nz(r = p);                  };  // LDx
+    template<Mode m> void cmp(u8& r) { u16 a = (this->*m)(); u8 p = rd(a); upd_nz(r - p); P[C] = (r >= p); };  // CMP, CPx
     /* Arithmetic and bitwise */
-    template<Mode m> void ADC() { u16 a = m(); u8 p = rd(a); s16 r = A + p + P[C]; upd_cv(A, p, r); upd_nz(A = r); };
-    template<Mode m> void SBC() { u16 a = m(); u8 p = rd(a) ^ 0xFF; s16 r = A + p + P[C]; upd_cv(A, p, r); upd_nz(A = r); };
-    template<Mode m> void BIT() { u16 a = m(); u8 p = rd(a); P[Z] = !(A & p); P[N] = p & 0x80; P[V] = p & 0x40; };
-    template<Mode m> void AND() { u16 a = m(); u8 p = rd(a); upd_nz(A &= p); };
-    template<Mode m> void EOR() { u16 a = m(); u8 p = rd(a); upd_nz(A ^= p); };
-    template<Mode m> void ORA() { u16 a = m(); u8 p = rd(a); upd_nz(A |= p); };
+    template<Mode m> void ADC() { u16 a = (this->*m)(); u8 p = rd(a); s16 r = A + p + P[C]; upd_cv(A, p, r); upd_nz(A = r); };
+    template<Mode m> void SBC() { u16 a = (this->*m)(); u8 p = rd(a) ^ 0xFF; s16 r = A + p + P[C]; upd_cv(A, p, r); upd_nz(A = r); };
+    template<Mode m> void BIT() { u16 a = (this->*m)(); u8 p = rd(a); P[Z] = !(A & p); P[N] = p & 0x80; P[V] = p & 0x40; };
+    template<Mode m> void AND() { u16 a = (this->*m)(); u8 p = rd(a); upd_nz(A &= p); };
+    template<Mode m> void EOR() { u16 a = (this->*m)(); u8 p = rd(a); upd_nz(A ^= p); };
+    template<Mode m> void ORA() { u16 a = (this->*m)(); u8 p = rd(a); upd_nz(A |= p); };
     /* Read-Modify-Write */
-    template<Mode m> void ASL() { u16 a = m(); u8 p = rd(a); P[C] = p & 0x80; T; upd_nz(wr(a, p << 1)); };
-    template<Mode m> void LSR() { u16 a = m(); u8 p = rd(a); P[C] = p & 0x01; T; upd_nz(wr(a, p >> 1)); };
-    template<Mode m> void ROL() { u16 a = m(); u8 p = rd(a); u8 c = P[C]     ; P[C] = p & 0x80; T; upd_nz(wr(a, (p << 1) | c) ); };
-    template<Mode m> void ROR() { u16 a = m(); u8 p = rd(a); u8 c = P[C] << 7; P[C] = p & 0x01; T; upd_nz(wr(a, c | (p >> 1)) ); };
-    template<Mode m> void DEC() { u16 a = m(); u8 p = rd(a); T; upd_nz(wr(a, --p)); };
-    template<Mode m> void INC() { u16 a = m(); u8 p = rd(a); T; upd_nz(wr(a, ++p)); };
+    template<Mode m> void ASL() { u16 a = (this->*m)(); u8 p = rd(a); P[C] = p & 0x80; T; upd_nz(wr(a, p << 1)); };
+    template<Mode m> void LSR() { u16 a = (this->*m)(); u8 p = rd(a); P[C] = p & 0x01; T; upd_nz(wr(a, p >> 1)); };
+    template<Mode m> void ROL() { u16 a = (this->*m)(); u8 p = rd(a); u8 c = P[C]     ; P[C] = p & 0x80; T; upd_nz(wr(a, (p << 1) | c) ); };
+    template<Mode m> void ROR() { u16 a = (this->*m)(); u8 p = rd(a); u8 c = P[C] << 7; P[C] = p & 0x01; T; upd_nz(wr(a, c | (p >> 1)) ); };
+    template<Mode m> void DEC() { u16 a = (this->*m)(); u8 p = rd(a); T; upd_nz(wr(a, --p)); };
+    template<Mode m> void INC() { u16 a = (this->*m)(); u8 p = rd(a); T; upd_nz(wr(a, ++p)); };
 
     /* DEx, INx */
-    template<u8& r> void dec() { upd_nz(--r); T; };
-    template<u8& r> void inc() { upd_nz(++r); T; };
+    void dec(u8& r) { upd_nz(--r); T; };
+    void inc(u8& r) { upd_nz(++r); T; };
     /* Bit shifting on the accumulator */
     void ASL_A() { P[C] = A & 0x80; upd_nz(A <<= 1); T; };
     void LSR_A() { P[C] = A & 0x01; upd_nz(A >>= 1); T; };
@@ -188,7 +189,7 @@ public:
     void ROR_A() { u8 c = P[C] << 7; P[C] = A & 0x01; upd_nz(A = (c | (A >> 1)) ); T; };
 
     /* Txx (move values between registers) */
-    template<u8& s, u8& d> void tr();
+    void tr(u8& s, u8& d);
 
     /* Stack operations */
     void PLP() { T; T; P.set(pop()); };
