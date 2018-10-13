@@ -1,4 +1,3 @@
-#include "ppu.hpp"
 #include "cpu.hpp"
 
 namespace CPU {
@@ -6,6 +5,11 @@ namespace CPU {
     u8 ram[0x800];
     u8 read_mem(u16 address) { return ram[address % 0x800]; }
     void write_mem(u16 address, u8 value) { ram[address % 0x800] = value; }
+
+    /// the PPU for calculating graphics
+    PPU* ppu;
+    void set_ppu(PPU* new_ppu) { ppu = new_ppu; }
+    PPU* get_ppu() { return ppu; }
 
     /// the joypad to get input data from
     Joypad* joypad;
@@ -36,7 +40,7 @@ namespace CPU {
 
     /* Cycle emulation */
     #define T   tick()
-    inline void tick() { PPU::step(); PPU::step(); PPU::step(); remainingCycles--; }
+    inline void tick() { ppu->step(); ppu->step(); ppu->step(); remainingCycles--; }
 
     /* Flags updating */
     inline void upd_cv(u8 x, u8 y, s16 r) { P[C] = (r>0xFF); P[V] = ~(x^y) & (x^r) & 0x80; }
@@ -57,7 +61,7 @@ namespace CPU {
         }
         // PPU
         else if (0x2000 <= addr && addr <= 0x3FFF) {
-            return PPU::access<wr>(addr % 8, v);
+            return ppu->access<wr>(addr % 8, v);
         }
         // APU (not implemented, NOP instead)
         else if ((0x4000 <= addr && addr <= 0x4013) || addr == 0x4015) {

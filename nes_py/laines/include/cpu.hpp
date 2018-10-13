@@ -5,8 +5,9 @@
 #include "common.hpp"
 #include "joypad.hpp"
 #include "cartridge.hpp"
+#include "ppu.hpp"
 
-/* Processor flags */
+/// Processor flags
 enum Flag {C, Z, I, D, V, N};
 /// a class to contain flag register data
 class Flags {
@@ -88,6 +89,20 @@ namespace CPU {
     enum IntType { NMI, RESET, IRQ, BRK };
     // Addressing mode
     typedef u16 (*Mode)(void);
+
+    /**
+        Set the local PPU to a new value
+
+        @param new_ppu the PPU pointer to replace the existing pointer
+    */
+    void set_ppu(PPU* new_ppu);
+
+    /**
+        Return a pointer to this CPU's PPU object.
+
+        @returns a pointer to the CPU's PPU
+    */
+    PPU* get_ppu();
 
     /**
         Set the local joy-pad to a new value
