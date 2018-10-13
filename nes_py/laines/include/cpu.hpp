@@ -159,7 +159,7 @@ public:
     u16 izy()   { u16 a = _izy(); if (cross(a-Y, Y)) T; return a;    };
 
     /* STx */
-    template<u8& r, Mode m> void st();
+    template<Mode m> void st(u8& r);
 
     template<u8& r, Mode m> void ld()  { u16 a = m(); u8 p = rd(a); upd_nz(r = p);                  };  // LDx
     template<u8& r, Mode m> void cmp() { u16 a = m(); u8 p = rd(a); upd_nz(r - p); P[C] = (r >= p); };  // CMP, CPx

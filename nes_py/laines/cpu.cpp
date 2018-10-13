@@ -93,10 +93,20 @@ template<bool is_write> u8 CPU::access(u16 addr, u8 v) {
     return 0;
 }
 
-template<u8& r, Mode m> void CPU::st()        {    wr(   m()    , r); }
-template<>              void CPU::st<A,izy>() { T; wr(_izy()    , A); }  // Exceptions.
-template<>              void CPU::st<A,abx>() { T; wr( abs() + X, A); }  // ...
-template<>              void CPU::st<A,aby>() { T; wr( abs() + Y, A); }  // ...
+template<Mode m> void CPU::st(u8& r) {
+    if (r == A && m == izy) {
+        T; wr(_izy()    , A);
+    }
+    if (r == A && m == abx) {
+        T; wr( abs() + X, A);
+    }
+    if (r == A && m == aby) {
+        T; wr( abs() + Y, A);
+    }
+    else {
+        wr(   m()    , r);
+    }
+}
 
 template<u8& s, u8& d> void CPU::tr()      { upd_nz(d = s); T; };
 template<>             void CPU::tr<X,S>() { S = X;         T; };  // TSX, exception.
@@ -141,15 +151,15 @@ void CPU::exec() {
         case 0x75: return ADC<zpx>()  ;  case 0x76: return ROR<zpx>()  ;
         case 0x78: return flag<I,1>() ;  case 0x79: return ADC<aby>()  ;
         case 0x7D: return ADC<abx>()  ;  case 0x7E: return ROR<_abx>() ;
-        case 0x81: return st<A,izx>() ;  case 0x84: return st<Y,zp>()  ;
-        case 0x85: return st<A,zp>()  ;  case 0x86: return st<X,zp>()  ;
+        case 0x81: return st<izx>(A) ;  case 0x84: return st<zp>(Y)  ;
+        case 0x85: return st<zp>(A)  ;  case 0x86: return st<zp>(X)  ;
         case 0x88: return dec<Y>()    ;  case 0x8A: return tr<X,A>()   ;
-        case 0x8C: return st<Y,abs>() ;  case 0x8D: return st<A,abs>() ;
-        case 0x8E: return st<X,abs>() ;  case 0x90: return br<C,0>()   ;
-        case 0x91: return st<A,izy>() ;  case 0x94: return st<Y,zpx>() ;
-        case 0x95: return st<A,zpx>() ;  case 0x96: return st<X,zpy>() ;
-        case 0x98: return tr<Y,A>()   ;  case 0x99: return st<A,aby>() ;
-        case 0x9A: return tr<X,S>()   ;  case 0x9D: return st<A,abx>() ;
+        case 0x8C: return st<abs>(Y) ;  case 0x8D: return st<abs>(A) ;
+        case 0x8E: return st<abs>(X) ;  case 0x90: return br<C,0>()   ;
+        case 0x91: return st<izy>(A) ;  case 0x94: return st<zpx>(Y) ;
+        case 0x95: return st<zpx>(A) ;  case 0x96: return st<zpy>(X) ;
+        case 0x98: return tr<Y,A>()   ;  case 0x99: return st<aby>(A) ;
+        case 0x9A: return tr<X,S>()   ;  case 0x9D: return st<abx>(A) ;
         case 0xA0: return ld<Y,imm>() ;  case 0xA1: return ld<A,izx>() ;
         case 0xA2: return ld<X,imm>() ;  case 0xA4: return ld<Y,zp>()  ;
         case 0xA5: return ld<A,zp>()  ;  case 0xA6: return ld<X,zp>()  ;
