@@ -3,7 +3,7 @@
 #include <cstring>
 #include <iostream>
 #include "common.hpp"
-#include "flags.hpp"
+#include "cpu_flags.hpp"
 #include "joypad.hpp"
 #include "cartridge.hpp"
 class PPU;
