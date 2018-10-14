@@ -297,7 +297,7 @@ template<Scanline s> void PPU::scanline_cycle() {
     static u16 addr;
 
     if (s == NMI && dot == 1) { status.vBlank = true; if (ctrl.nmi) nes->get_cpu()->set_nmi(); }
-    else if (s == POST && dot == 0) nes->get_s()->new_frame(pixels);
+    else if (s == POST && dot == 0) nes->get_gui()->new_frame(pixels);
     else if (s == VISIBLE || s == PRE) {
         // Sprites:
         switch (dot) {
