@@ -13,9 +13,9 @@ public:
     Joypad* joypad;
     /// the GUI for the game-state
     GUI* gui;
+    /// the state for the PPU
+    PPU::_PPU* ppu;
     /// the state for the CPU
-    PPUState* ppu_state;
-    /// the state for the GPU
     CPUState* cpu_state;
 
     /// Initialize a new game-state
@@ -25,7 +25,7 @@ public:
     /// create a new game-state as a copy of another
     GameState(GameState* state);
     /// create a new game-state as a copy of another with different states
-    GameState(GameState* state, CPUState* new_cpu_state, PPUState* new_ppu_state);
+    GameState(GameState* state, CPUState* new_cpu_state);
     /// Load the game-state's data into the machine
     void load();
 };

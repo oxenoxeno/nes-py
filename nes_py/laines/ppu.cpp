@@ -3,46 +3,6 @@
 #include "ppu.hpp"
 
 namespace PPU {
-#include "palette.inc"
-    /// Mirroring mode
-    Mirroring mirroring;
-    /// VRAM for name-tables
-    u8 ciRam[0x800];
-    /// VRAM for palettes
-    u8 cgRam[0x20];
-    /// VRAM for sprite properties
-    u8 oamMem[0x100];
-    /// Sprite buffers
-    Sprite oam[8], secOam[8];
-    /// Video buffer
-    u32 pixels[256 * 240];
-
-    /// Loopy V, T
-    Addr vAddr, tAddr;
-    /// Fine X
-    u8 fX;
-    /// OAM address
-    u8 oamAddr;
-
-    /// PPUCTRL   ($2000) register
-    Ctrl ctrl;
-    /// PPUMASK   ($2001) register
-    Mask mask;
-    /// PPUSTATUS ($2002) register
-    Status status;
-
-    /// Background latches:
-    u8 nt, at, bgL, bgH;
-    /// Background shift registers:
-    u8 atShiftL, atShiftH; u16 bgShiftL, bgShiftH;
-    bool atLatchL, atLatchH;
-
-    /// Rendering counters:
-    int scanline, dot;
-    bool frameOdd;
-
-    inline bool rendering() { return mask.bg || mask.spr; }
-    inline int spr_height() { return ctrl.sprSz ? 16 : 8; }
 
     /// the GUI this PPU has access to
     GUI* gui;
@@ -54,19 +14,72 @@ namespace PPU {
     void set_cartridge(Cartridge* new_cartridge) { cartridge = new_cartridge; }
     Cartridge* get_cartridge() { return cartridge; }
 
-    /// Get CIRAM address according to mirroring.
-    u16 nt_mirror(u16 addr) {
+    _PPU* _ppu = nullptr;
+
+    void set_ppu(_PPU* new_ppu) { _ppu = new_ppu; }
+
+    void step() { _ppu->step(); }
+
+    void set_mirroring(Mirroring mode) { _ppu->set_mirroring(mode); };
+
+    /// Access PPU through registers.
+    template <bool write> u8 access(u16 index, u8 v) {
+        return _ppu->access<write>(index, v);
+    }
+    template u8 access<0>(u16, u8);
+    template u8 access<1>(u16, u8);
+
+    _PPU::_PPU() {
+        frameOdd = false;
+        scanline = dot = 0;
+        ctrl.r = mask.r = status.r = 0;
+        memset(ciRam,  0xFF, sizeof(ciRam));
+        memset(cgRam,  0x00, sizeof(cgRam));
+        memset(oamMem, 0x00, sizeof(oamMem));
+        memset(oam, 0x00, sizeof(oam));
+        memset(secOam, 0x00, sizeof(secOam));
+        memset(pixels, 0x00, sizeof(pixels));
+    }
+
+    _PPU::_PPU(_PPU* ppu) : _PPU() {
+        std::copy(std::begin(ppu->ciRam), std::end(ppu->ciRam), std::begin(ciRam));
+        std::copy(std::begin(ppu->cgRam), std::end(ppu->cgRam), std::begin(cgRam));
+        std::copy(std::begin(ppu->oamMem), std::end(ppu->oamMem), std::begin(oamMem));
+        std::copy(std::begin(ppu->oam), std::end(ppu->oam), std::begin(oam));
+        std::copy(std::begin(ppu->secOam), std::end(ppu->secOam), std::begin(secOam));
+        std::copy(std::begin(ppu->pixels), std::end(ppu->pixels), std::begin(pixels));
+        mirroring = ppu->mirroring;
+        vAddr = ppu->vAddr;
+        tAddr = ppu->tAddr;
+        fX = ppu->fX;
+        oamAddr = ppu->oamAddr;
+        ctrl = ppu->ctrl;
+        mask = ppu->mask;
+        status = ppu->status;
+        nt = ppu->nt;
+        at = ppu->at;
+        bgL = ppu->bgL;
+        bgH = ppu->bgH;
+        atShiftL = ppu->atShiftL;
+        atShiftH = ppu->atShiftH;
+        bgShiftL = ppu->bgShiftL;
+        bgShiftH = ppu->bgShiftH;
+        atLatchL = ppu->atLatchL;
+        atLatchH = ppu->atLatchH;
+        scanline = ppu->scanline;
+        dot = ppu->dot;
+        frameOdd = ppu->frameOdd;
+    }
+
+    u16 _PPU::nt_mirror(u16 addr) {
         switch (mirroring) {
             case VERTICAL:    return addr % 0x800;
             case HORIZONTAL:  return ((addr / 2) & 0x400) + (addr % 0x400);
             default:          return addr - 0x2000;
         }
     }
-    /// Set the PPU to the given mirroring mode.
-    void set_mirroring(Mirroring mode) { mirroring = mode; }
 
-    /// Read an address from PPU memory.
-    u8 rd(u16 addr) {
+    u8 _PPU::rd(u16 addr) {
         // CHR-ROM/RAM
         if (0x0000 <= addr && addr <= 0x1FFF) {
             return cartridge->chr_access<0>(addr);
@@ -84,8 +97,8 @@ namespace PPU {
 
         return 0;
     }
-    /// Write a byte to PPU memory.
-    void wr(u16 addr, u8 v) {
+
+    void _PPU::wr(u16 addr, u8 v) {
         // CHR-ROM/RAM
         if (0x0000 <= addr && addr <= 0x1FFF) {
             cartridge->chr_access<1>(addr, v);
@@ -102,8 +115,7 @@ namespace PPU {
         }
     }
 
-    /// Access PPU through registers.
-    template <bool write> u8 access(u16 index, u8 v) {
+    template <bool write> u8 _PPU::access(u16 index, u8 v) {
         static u8 res;      // Result of the operation.
         static u8 buffer;   // VRAM read buffer.
         static bool latch;  // Detect second reading.
@@ -158,25 +170,28 @@ namespace PPU {
             }
         return res;
     }
-    template u8 access<0>(u16, u8); template u8 access<1>(u16, u8);
+    template u8 _PPU::access<0>(u16, u8);
+    template u8 _PPU::access<1>(u16, u8);
 
-    /* Calculate graphics addresses */
-    inline u16 nt_addr() {
+    u16 _PPU::nt_addr() {
         return 0x2000 | (vAddr.r & 0xFFF);
     }
-    inline u16 at_addr() {
+
+    u16 _PPU::at_addr() {
         return 0x23C0 | (vAddr.nt << 10) | ((vAddr.cY / 4) << 3) | (vAddr.cX / 4);
     }
-    inline u16 bg_addr() {
+
+    u16 _PPU::bg_addr() {
         return (ctrl.bgTbl * 0x1000) + (nt * 16) + vAddr.fY;
     }
-    /* Increment the scroll by one pixel */
-    inline void h_scroll() {
+
+    void _PPU::h_scroll() {
         if (!rendering()) return;
         if (vAddr.cX == 31) vAddr.r ^= 0x41F;
         else vAddr.cX++;
     }
-    inline void v_scroll() {
+
+    void _PPU::v_scroll() {
         if (!rendering()) return;
         if (vAddr.fY < 7) vAddr.fY++;
         else {
@@ -186,17 +201,18 @@ namespace PPU {
             else                       vAddr.cY++;
         }
     }
-    /* Copy scrolling data from loopy T to loopy V */
-    inline void h_update() {
+
+    void _PPU::h_update() {
         if (!rendering()) return;
         vAddr.r = (vAddr.r & ~0x041F) | (tAddr.r & 0x041F);
     }
-    inline void v_update() {
+
+    void _PPU::v_update() {
         if (!rendering()) return;
         vAddr.r = (vAddr.r & ~0x7BE0) | (tAddr.r & 0x7BE0);
     }
-    /* Put new data into the shift registers */
-    inline void reload_shift() {
+
+    void _PPU::reload_shift() {
         bgShiftL = (bgShiftL & 0xFF00) | bgL;
         bgShiftH = (bgShiftH & 0xFF00) | bgH;
 
@@ -204,8 +220,7 @@ namespace PPU {
         atLatchH = (at & 2);
     }
 
-    /* Clear secondary OAM */
-    void clear_oam() {
+    void _PPU::clear_oam() {
         for (int i = 0; i < 8; i++) {
             secOam[i].id    = 64;
             secOam[i].y     = 0xFF;
@@ -217,8 +232,7 @@ namespace PPU {
         }
     }
 
-    /* Fill secondary OAM with the sprite infos for the next scanline */
-    void eval_sprites() {
+    void _PPU::eval_sprites() {
         int n = 0;
         for (int i = 0; i < 64; i++) {
             int line = (scanline == 261 ? -1 : scanline) - oamMem[i*4 + 0];
@@ -239,8 +253,7 @@ namespace PPU {
         }
     }
 
-    /* Load the sprite info into primary OAM and fetch their tile data. */
-    void load_sprites() {
+    void _PPU::load_sprites() {
         u16 addr;
         for (int i = 0; i < 8; i++) {
             // Copy secondary OAM into primary.
@@ -264,8 +277,7 @@ namespace PPU {
         }
     }
 
-    /* Process a pixel, draw it if it's on screen */
-    void pixel() {
+    void _PPU::pixel() {
         u8 palette = 0, objPalette = 0;
         bool objPriority = 0;
         int x = dot - 2;
@@ -313,8 +325,7 @@ namespace PPU {
         atShiftH = (atShiftH << 1) | atLatchH;
     }
 
-    /* Execute a cycle of a scanline */
-    template<Scanline s> void scanline_cycle() {
+    template<Scanline s> void _PPU::scanline_cycle() {
         static u16 addr;
 
         if (s == NMI && dot == 1) { status.vBlank = true; if (ctrl.nmi) CPU::set_nmi(); }
@@ -386,7 +397,7 @@ namespace PPU {
         }
     }
 
-    void step() {
+    void _PPU::step() {
         if (0 <= scanline && scanline <= 239)
             scanline_cycle<VISIBLE>();
         else if (scanline == 240)
@@ -405,76 +416,4 @@ namespace PPU {
         }
     }
 
-    void reset() {
-        frameOdd = false;
-        scanline = dot = 0;
-        ctrl.r = mask.r = status.r = 0;
-
-        memset(pixels, 0x00, sizeof(pixels));
-        memset(ciRam,  0xFF, sizeof(ciRam));
-        memset(oamMem, 0x00, sizeof(oamMem));
-    }
-
-    PPUState* get_state() {
-        PPUState* state = new PPUState();
-        state->mirroring = mirroring;
-        std::copy(std::begin(ciRam), std::end(ciRam), std::begin(state->ciRam));
-        std::copy(std::begin(cgRam), std::end(cgRam), std::begin(state->cgRam));
-        std::copy(std::begin(oamMem), std::end(oamMem), std::begin(state->oamMem));
-        std::copy(std::begin(oam), std::end(oam), std::begin(state->oam));
-        std::copy(std::begin(secOam), std::end(secOam), std::begin(state->secOam));
-        std::copy(std::begin(pixels), std::end(pixels), std::begin(state->pixels));
-        state->vAddr = vAddr;
-        state->tAddr = tAddr;
-        state->fX = fX;
-        state->oamAddr = oamAddr;
-        state->ctrl = ctrl;
-        state->mask = mask;
-        state->status = status;
-        state->nt = nt;
-        state->at = at;
-        state->bgL = bgL;
-        state->bgH = bgH;
-        state->atShiftL = atShiftL;
-        state->atShiftH = atShiftH;
-        state->bgShiftL = bgShiftL;
-        state->bgShiftH = bgShiftH;
-        state->atLatchL = atLatchL;
-        state->atLatchH = atLatchH;
-        state->scanline = scanline;
-        state->dot = dot;
-        state->frameOdd = frameOdd;
-
-        return state;
-    }
-
-    void set_state(PPUState* state) {
-        mirroring = state->mirroring;
-        std::copy(std::begin(state->ciRam), std::end(state->ciRam), std::begin(ciRam));
-        std::copy(std::begin(state->cgRam), std::end(state->cgRam), std::begin(cgRam));
-        std::copy(std::begin(state->oamMem), std::end(state->oamMem), std::begin(oamMem));
-        std::copy(std::begin(state->oam), std::end(state->oam), std::begin(oam));
-        std::copy(std::begin(state->secOam), std::end(state->secOam), std::begin(secOam));
-        std::copy(std::begin(state->pixels), std::end(state->pixels), std::begin(pixels));
-        vAddr = state->vAddr;
-        tAddr = state->tAddr;
-        fX = state->fX;
-        oamAddr = state->oamAddr;
-        ctrl = state->ctrl;
-        mask = state->mask;
-        status = state->status;
-        nt = state->nt;
-        at = state->at;
-        bgL = state->bgL;
-        bgH = state->bgH;
-        atShiftL = state->atShiftL;
-        atShiftH = state->atShiftH;
-        bgShiftL = state->bgShiftL;
-        bgShiftH = state->bgShiftH;
-        atLatchL = state->atLatchL;
-        atLatchH = state->atLatchH;
-        scanline = state->scanline;
-        dot = state->dot;
-        frameOdd = state->frameOdd;
-    }
 }

@@ -19,8 +19,6 @@ NESEnv::NESEnv(wchar_t* path) {
 void NESEnv::reset() {
     // initialize the CPU
     CPU::power();
-    // initialize the PPU
-    PPU::reset();
 }
 
 void NESEnv::step(unsigned char action) {
@@ -34,7 +32,7 @@ void NESEnv::backup() {
     // delete any current backup
     delete backup_state;
     // copy the current state as the backup state
-    backup_state = new GameState(current_state, CPU::get_state(), PPU::get_state());
+    backup_state = new GameState(current_state, CPU::get_state());
 }
 
 void NESEnv::restore() {

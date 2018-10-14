@@ -1,15 +1,16 @@
 #include "gamestate.hpp"
 
 GameState::GameState() {
-    ppu_state = new PPUState();
     cpu_state = new CPUState();
+    ppu = new PPU::_PPU();
+    PPU::set_ppu(ppu);
 };
 
 GameState::~GameState() {
     delete cartridge;
     delete joypad;
     delete gui;
-    delete ppu_state;
+    delete ppu;
     delete cpu_state;
 }
 
@@ -17,16 +18,16 @@ GameState::GameState(GameState* state) {
     cartridge = new Cartridge(state->cartridge);
     joypad = new Joypad(state->joypad);
     gui = new GUI(state->gui);
+    ppu = new PPU::_PPU(state->ppu);
     cpu_state = new CPUState(state->cpu_state);
-    ppu_state = new PPUState(state->ppu_state);
 }
 
-GameState::GameState(GameState* state, CPUState* cpu, PPUState* ppu) {
+GameState::GameState(GameState* state, CPUState* cpu) {
     cartridge = new Cartridge(state->cartridge);
     joypad = new Joypad(state->joypad);
     gui = new GUI(state->gui);
+    ppu = new PPU::_PPU(state->ppu);
     cpu_state = cpu;
-    ppu_state = ppu;
 }
 
 void GameState::load() {
@@ -35,7 +36,7 @@ void GameState::load() {
     CPU::set_cartridge(cartridge);
     CPU::set_joypad(joypad);
     // set the PPU up
-    PPU::set_state(ppu_state);
+    PPU::set_ppu(ppu);
     PPU::set_gui(gui);
     PPU::set_cartridge(cartridge);
 }
