@@ -50,7 +50,7 @@ u16 PPU::nt_mirror(u16 addr) {
 u8 PPU::rd(u16 addr) {
     // CHR-ROM/RAM
     if (0x0000 <= addr && addr <= 0x1FFF) {
-        return cartridge->chr_access<0>(addr);
+        return nes->get_cartridge()->chr_access<0>(addr);
     }
     // Nametables
     else if (0x2000 <= addr && addr <= 0x3EFF) {
@@ -69,7 +69,7 @@ u8 PPU::rd(u16 addr) {
 void PPU::wr(u16 addr, u8 v) {
     // CHR-ROM/RAM
     if (0x0000 <= addr && addr <= 0x1FFF) {
-        cartridge->chr_access<1>(addr, v);
+        nes->get_cartridge()->chr_access<1>(addr, v);
     }
     // Nametables
     else if (0x2000 <= addr && addr <= 0x3EFF) {
@@ -296,8 +296,8 @@ void PPU::pixel() {
 template<Scanline s> void PPU::scanline_cycle() {
     static u16 addr;
 
-    if (s == NMI && dot == 1) { status.vBlank = true; if (ctrl.nmi) CPU::set_nmi(); }
-    else if (s == POST && dot == 0) gui->new_frame(pixels);
+    if (s == NMI && dot == 1) { status.vBlank = true; if (ctrl.nmi) nes->get_cpu->set_nmi(); }
+    else if (s == POST && dot == 0) nes->get_s()->new_frame(pixels);
     else if (s == VISIBLE || s == PRE) {
         // Sprites:
         switch (dot) {
@@ -361,7 +361,7 @@ template<Scanline s> void PPU::scanline_cycle() {
         }
 
         // Signal scanline to mapper:
-        if (dot == 260 && rendering()) cartridge->signal_scanline();
+        if (dot == 260 && rendering()) nes->get_cartridge()->signal_scanline();
     }
 }
 

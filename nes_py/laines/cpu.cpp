@@ -24,7 +24,7 @@ CPU::CPU(CPU* cpu) {
     irq = cpu->irq;
 }
 
-void CPU::tick() { ppu->step(); ppu->step(); ppu->step(); remainingCycles--; }
+void CPU::tick() { nes->get_ppu()->step(); nes->get_ppu()->step(); nes->get_ppu()->step(); remainingCycles--; }
 
 // TODO: remove this and just use initializer?
 void CPU::power() {
@@ -60,7 +60,7 @@ template<bool is_write> u8 CPU::access(u16 addr, u8 v) {
     }
     // PPU
     else if (0x2000 <= addr && addr <= 0x3FFF) {
-        return ppu->access<is_write>(addr % 8, v);
+        return nes->get_ppu()->access<is_write>(addr % 8, v);
     }
     // APU (not implemented, NOP instead)
     else if ((0x4000 <= addr && addr <= 0x4013) || addr == 0x4015) {
@@ -71,7 +71,7 @@ template<bool is_write> u8 CPU::access(u16 addr, u8 v) {
         if (is_write)
             return 1;
         else
-            return joypad->read_state(1);
+            return nes->get_joypad()->read_state(1);
     }
     // OAM / DMA
     else if (addr == 0x4014) {
@@ -82,14 +82,14 @@ template<bool is_write> u8 CPU::access(u16 addr, u8 v) {
     else if (addr == 0x4016) {
         // Joypad strobe
         if (is_write)
-            joypad->write_strobe(v & 1);
+            nes->get_joypad()->write_strobe(v & 1);
         // Joypad 0
         else
-            return joypad->read_state(0);
+            return nes->get_joypad()->read_state(0);
     }
     // Cartridge
     else if (0x4018 <= addr && addr <= 0xFFFF) {
-        return cartridge->access<is_write>(addr, v);
+        return nes->get_cartridge()->access<is_write>(addr, v);
     }
 
     return 0;
