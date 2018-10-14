@@ -6,9 +6,9 @@
 class NESEnv {
 private:
     /// the current NES being emulated
-    NES* current;
+    NES* current_nes;
     /// the backup NES to restore to
-    NES* backup;
+    NES* backup_nes;
 
 public:
 
@@ -21,7 +21,7 @@ public:
     NESEnv(wchar_t* path);
 
     /// Reset the emulator to its initial state.
-    void reset() { current->power(); };
+    void reset();
 
     /**
         Perform a discrete "step" of the NES by rendering 1 frame.

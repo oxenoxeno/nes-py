@@ -5,28 +5,32 @@ NESEnv::NESEnv(wchar_t* path) {
     std::wstring ws_rom_path(path);
     std::string rom_path(ws_rom_path.begin(), ws_rom_path.end());
     // setup the NES emulator for the game
-    current = new NES(rom_path.c_str());
+    current_nes = new NES(rom_path.c_str());
     // set the backup state to NULL
-    backup_state = nullptr;
+    backup_nes = nullptr;
+}
+
+void NESEnv::reset() {
+    current_nes->power();
 }
 
 void NESEnv::step(unsigned char action) {
     // write the action to the player's joy-pad
-    current->get_joypad()->write_buttons(0, action);
+    current_nes->get_joypad()->write_buttons(0, action);
     // run a frame on the CPU
-    current->run_frame();
+    current_nes->run_frame();
 }
 
 void NESEnv::backup() {
     // delete any current backup
-    delete backup_state;
+    delete backup_nes;
     // copy the current state as the backup state
-    backup_state = new NES(current);
+    backup_nes = new NES(current_nes);
 }
 
 void NESEnv::restore() {
     // delete the current state in progress
-    delete current;
+    delete current_nes;
     // copy the backup state into the current state
-    current = new NES(backup);
+    current_nes = new NES(backup_nes);
 }
