@@ -80,26 +80,31 @@ private:
     /* MARK: STx */
 
     template<Mode m> void st(u8& r);
-    template<Mode m> void ld(u8& r)  { u16 a = (this->*m)(); u8 p = rd(a); upd_nz(r = p);                  };  // LDx
-    template<Mode m> void cmp(u8& r) { u16 a = (this->*m)(); u8 p = rd(a); upd_nz(r - p); P[C] = (r >= p); };  // CMP, CPx
+
+    #define G  u16  a = (this->*m)(); u8 p = rd(a)  /* Fetch parameter */
+
+    template<Mode m> void ld(u8& r)  { G; upd_nz(r = p);                  };  // LDx
+    template<Mode m> void cmp(u8& r) { G; upd_nz(r - p); P[C] = (r >= p); };  // CMP, CPx
 
     /* MARK: Arithmetic and bitwise */
 
-    template<Mode m> void ADC() { u16 a = (this->*m)(); u8 p = rd(a); s16 r = A + p + P[C]; upd_cv(A, p, r); upd_nz(A = r); };
-    template<Mode m> void SBC() { u16 a = (this->*m)(); u8 p = rd(a) ^ 0xFF; s16 r = A + p + P[C]; upd_cv(A, p, r); upd_nz(A = r); };
-    template<Mode m> void BIT() { u16 a = (this->*m)(); u8 p = rd(a); P[Z] = !(A & p); P[N] = p & 0x80; P[V] = p & 0x40; };
-    template<Mode m> void AND() { u16 a = (this->*m)(); u8 p = rd(a); upd_nz(A &= p); };
-    template<Mode m> void EOR() { u16 a = (this->*m)(); u8 p = rd(a); upd_nz(A ^= p); };
-    template<Mode m> void ORA() { u16 a = (this->*m)(); u8 p = rd(a); upd_nz(A |= p); };
+    template<Mode m> void ADC() { G; s16 r = A + p + P[C]; upd_cv(A, p, r); upd_nz(A = r); };
+    template<Mode m> void SBC() { G ^ 0xFF; s16 r = A + p + P[C]; upd_cv(A, p, r); upd_nz(A = r); };
+    template<Mode m> void BIT() { G; P[Z] = !(A & p); P[N] = p & 0x80; P[V] = p & 0x40; };
+    template<Mode m> void AND() { G; upd_nz(A &= p); };
+    template<Mode m> void EOR() { G; upd_nz(A ^= p); };
+    template<Mode m> void ORA() { G; upd_nz(A |= p); };
 
     /* MARK: Read-Modify-Write */
 
-    template<Mode m> void ASL() { u16 a = (this->*m)(); u8 p = rd(a); P[C] = p & 0x80; tick(); upd_nz(wr(a, p << 1)); };
-    template<Mode m> void LSR() { u16 a = (this->*m)(); u8 p = rd(a); P[C] = p & 0x01; tick(); upd_nz(wr(a, p >> 1)); };
-    template<Mode m> void ROL() { u16 a = (this->*m)(); u8 p = rd(a); u8 c = P[C]     ; P[C] = p & 0x80; tick(); upd_nz(wr(a, (p << 1) | c) ); };
-    template<Mode m> void ROR() { u16 a = (this->*m)(); u8 p = rd(a); u8 c = P[C] << 7; P[C] = p & 0x01; tick(); upd_nz(wr(a, c | (p >> 1)) ); };
-    template<Mode m> void DEC() { u16 a = (this->*m)(); u8 p = rd(a); tick(); upd_nz(wr(a, --p)); };
-    template<Mode m> void INC() { u16 a = (this->*m)(); u8 p = rd(a); tick(); upd_nz(wr(a, ++p)); };
+    template<Mode m> void ASL() { G; P[C] = p & 0x80; tick(); upd_nz(wr(a, p << 1)); };
+    template<Mode m> void LSR() { G; P[C] = p & 0x01; tick(); upd_nz(wr(a, p >> 1)); };
+    template<Mode m> void ROL() { G; u8 c = P[C]     ; P[C] = p & 0x80; tick(); upd_nz(wr(a, (p << 1) | c) ); };
+    template<Mode m> void ROR() { G; u8 c = P[C] << 7; P[C] = p & 0x01; tick(); upd_nz(wr(a, c | (p >> 1)) ); };
+    template<Mode m> void DEC() { G; tick(); upd_nz(wr(a, --p)); };
+    template<Mode m> void INC() { G; tick(); upd_nz(wr(a, ++p)); };
+
+    #undef G
 
     /* MARK: DEx, INx */
 

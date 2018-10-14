@@ -95,11 +95,11 @@ template<Mode m> void CPU::st(u8& r) {
     }
     if (r == A && m == &CPU::abx) {
         tick();
-        wr( abs() + X, A);
+        wr(abs() + X, A);
     }
     if (r == A && m == &CPU::aby) {
         tick();
-        wr( abs() + Y, A);
+        wr(abs() + Y, A);
     }
     else {
         wr((this->*m)(), r);
