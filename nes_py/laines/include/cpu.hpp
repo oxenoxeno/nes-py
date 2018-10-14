@@ -206,6 +206,9 @@ public:
     */
     void set_irq(bool v = true) { irq = v; };
 
+    /// Reset the machine and load the initial instructions
+    void power();
+
     /// Run the CPU for roughly a frame
     void run_frame();
 

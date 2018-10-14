@@ -6,7 +6,6 @@ CPU::CPU() {
     A = X = Y = S = 0x00;
     memset(ram, 0xFF, sizeof(ram));
     nmi = irq = false;
-    INT<RESET>();
 }
 
 CPU::CPU(CPU* cpu) {
@@ -24,6 +23,10 @@ CPU::CPU(CPU* cpu) {
     // copy the interrupt flags
     nmi = cpu->nmi;
     irq = cpu->irq;
+}
+
+void CPU::power() {
+    INT<RESET>();
 }
 
 void CPU::tick() { nes->get_ppu()->step(); nes->get_ppu()->step(); nes->get_ppu()->step(); remainingCycles--; }
