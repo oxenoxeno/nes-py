@@ -123,9 +123,8 @@ public:
     */
     void set_irq(bool v = true) { irq = v; };
 
-    /// Cycle emulation.
-    #define T   tick();
-    void tick() { ppu->step(); ppu->step(); ppu->step(); remainingCycles--; };
+    /// Perform a single CPU cycle, i.e., one clock tick
+    void tick();
 
     /* Flags updating */
     void upd_cv(u8 x, u8 y, s16 r) { P[C] = (r>0xFF); P[V] = ~(x^y) & (x^r) & 0x80; };
@@ -138,8 +137,8 @@ public:
 
     template<bool is_write> u8 access(u16 addr, u8 v = 0);
 
-    u8  wr(u16 a, u8 v)      { T; return access<1>(a, v);   };
-    u8  rd(u16 a)            { T; return access<0>(a);      }
+    u8  wr(u16 a, u8 v)      { tick(); return access<1>(a, v);   };
+    u8  rd(u16 a)            { tick(); return access<0>(a);      }
     u16 rd16_d(u16 a, u16 b) { return rd(a) | (rd(b) << 8); };
     u16 rd16(u16 a)          { return rd16_d(a, a+1);       };
     u8  push(u8 v)           { return wr(0x100 + (S--), v); };
@@ -149,15 +148,15 @@ public:
     u16 imm()   { return PC++;                                       };
     u16 imm16() { PC += 2; return PC - 2;                            };
     u16 abs()   { return rd16(imm16());                              };
-    u16 _abx()  { T; return abs() + X;                               };  // Exception.
-    u16 abx()   { u16 a = abs(); if (cross(a, X)) T; return a + X;   };
-    u16 aby()   { u16 a = abs(); if (cross(a, Y)) T; return a + Y;   };
+    u16 _abx()  { tick(); return abs() + X;                               };  // Exception.
+    u16 abx()   { u16 a = abs(); if (cross(a, X)) tick(); return a + X;   };
+    u16 aby()   { u16 a = abs(); if (cross(a, Y)) tick(); return a + Y;   };
     u16 zp()    { return rd(imm());                                  };
-    u16 zpx()   { T; return (zp() + X) % 0x100;                      };
-    u16 zpy()   { T; return (zp() + Y) % 0x100;                      };
+    u16 zpx()   { tick(); return (zp() + X) % 0x100;                      };
+    u16 zpy()   { tick(); return (zp() + Y) % 0x100;                      };
     u16 izx()   { u8 i = zpx(); return rd16_d(i, (i+1) % 0x100);     };
     u16 _izy()  { u8 i = zp();  return rd16_d(i, (i+1) % 0x100) + Y; };  // Exception.
-    u16 izy()   { u16 a = _izy(); if (cross(a-Y, Y)) T; return a;    };
+    u16 izy()   { u16 a = _izy(); if (cross(a-Y, Y)) tick(); return a;    };
 
     /* STx */
     template<Mode m> void st(u8& r);
@@ -172,58 +171,58 @@ public:
     template<Mode m> void EOR() { u16 a = (this->*m)(); u8 p = rd(a); upd_nz(A ^= p); };
     template<Mode m> void ORA() { u16 a = (this->*m)(); u8 p = rd(a); upd_nz(A |= p); };
     /* Read-Modify-Write */
-    template<Mode m> void ASL() { u16 a = (this->*m)(); u8 p = rd(a); P[C] = p & 0x80; T; upd_nz(wr(a, p << 1)); };
-    template<Mode m> void LSR() { u16 a = (this->*m)(); u8 p = rd(a); P[C] = p & 0x01; T; upd_nz(wr(a, p >> 1)); };
-    template<Mode m> void ROL() { u16 a = (this->*m)(); u8 p = rd(a); u8 c = P[C]     ; P[C] = p & 0x80; T; upd_nz(wr(a, (p << 1) | c) ); };
-    template<Mode m> void ROR() { u16 a = (this->*m)(); u8 p = rd(a); u8 c = P[C] << 7; P[C] = p & 0x01; T; upd_nz(wr(a, c | (p >> 1)) ); };
-    template<Mode m> void DEC() { u16 a = (this->*m)(); u8 p = rd(a); T; upd_nz(wr(a, --p)); };
-    template<Mode m> void INC() { u16 a = (this->*m)(); u8 p = rd(a); T; upd_nz(wr(a, ++p)); };
+    template<Mode m> void ASL() { u16 a = (this->*m)(); u8 p = rd(a); P[C] = p & 0x80; tick(); upd_nz(wr(a, p << 1)); };
+    template<Mode m> void LSR() { u16 a = (this->*m)(); u8 p = rd(a); P[C] = p & 0x01; tick(); upd_nz(wr(a, p >> 1)); };
+    template<Mode m> void ROL() { u16 a = (this->*m)(); u8 p = rd(a); u8 c = P[C]     ; P[C] = p & 0x80; tick(); upd_nz(wr(a, (p << 1) | c) ); };
+    template<Mode m> void ROR() { u16 a = (this->*m)(); u8 p = rd(a); u8 c = P[C] << 7; P[C] = p & 0x01; tick(); upd_nz(wr(a, c | (p >> 1)) ); };
+    template<Mode m> void DEC() { u16 a = (this->*m)(); u8 p = rd(a); tick(); upd_nz(wr(a, --p)); };
+    template<Mode m> void INC() { u16 a = (this->*m)(); u8 p = rd(a); tick(); upd_nz(wr(a, ++p)); };
 
     /* DEx, INx */
-    void dec(u8& r) { upd_nz(--r); T; };
-    void inc(u8& r) { upd_nz(++r); T; };
+    void dec(u8& r) { upd_nz(--r); tick(); };
+    void inc(u8& r) { upd_nz(++r); tick(); };
     /* Bit shifting on the accumulator */
-    void ASL_A() { P[C] = A & 0x80; upd_nz(A <<= 1); T; };
-    void LSR_A() { P[C] = A & 0x01; upd_nz(A >>= 1); T; };
-    void ROL_A() { u8 c = P[C]     ; P[C] = A & 0x80; upd_nz(A = ((A << 1) | c) ); T; };
-    void ROR_A() { u8 c = P[C] << 7; P[C] = A & 0x01; upd_nz(A = (c | (A >> 1)) ); T; };
+    void ASL_A() { P[C] = A & 0x80; upd_nz(A <<= 1); tick(); };
+    void LSR_A() { P[C] = A & 0x01; upd_nz(A >>= 1); tick(); };
+    void ROL_A() { u8 c = P[C]     ; P[C] = A & 0x80; upd_nz(A = ((A << 1) | c) ); tick(); };
+    void ROR_A() { u8 c = P[C] << 7; P[C] = A & 0x01; upd_nz(A = (c | (A >> 1)) ); tick(); };
 
     /* Txx (move values between registers) */
     void tr(u8& s, u8& d);
 
     /* Stack operations */
-    void PLP() { T; T; P.set(pop()); };
-    void PHP() { T; push(P.get() | (1 << 4)); };  // B flag set.
-    void PLA() { T; T; A = pop(); upd_nz(A);  };
-    void PHA() { T; push(A); };
+    void PLP() { tick(); tick(); P.set(pop()); };
+    void PHP() { tick(); push(P.get() | (1 << 4)); };  // B flag set.
+    void PLA() { tick(); tick(); A = pop(); upd_nz(A);  };
+    void PHA() { tick(); push(A); };
 
     /* Flow control (branches, jumps) */
-    template<Flag f, bool v> void br() { s8 j = rd(imm()); if (P[f] == v) { T; PC += j; } };
+    template<Flag f, bool v> void br() { s8 j = rd(imm()); if (P[f] == v) { tick(); PC += j; } };
     void JMP_IND() { u16 i = rd16(imm16()); PC = rd16_d(i, (i&0xFF00) | ((i+1) % 0x100)); };
     void JMP()     { PC = rd16(imm16()); };
-    void JSR()     { u16 t = PC+1; T; push(t >> 8); push(t); PC = rd16(imm16()); };
+    void JSR()     { u16 t = PC+1; tick(); push(t >> 8); push(t); PC = rd16(imm16()); };
 
     /* Return instructions */
-    void RTS() { T; T;  PC = (pop() | (pop() << 8)) + 1; T; };
+    void RTS() { tick(); tick();  PC = (pop() | (pop() << 8)) + 1; tick(); };
     void RTI() { PLP(); PC =  pop() | (pop() << 8);         };
 
-    template<Flag f, bool v> void flag() { P[f] = v; T; };  // Clear and set flags.
+    template<Flag f, bool v> void flag() { P[f] = v; tick(); };  // Clear and set flags.
     template<IntType t> void INT() {
         // BRK already performed the fetch.
-        T; if (t != BRK) T;
+        tick(); if (t != BRK) tick();
         // Writes on stack are inhibited on RESET.
         if (t != RESET) {
             push(PC >> 8); push(PC & 0xFF);
             push(P.get() | ((t == BRK) << 4));  // Set B if BRK.
         }
-        else { S -= 3; T; T; T; }
+        else { S -= 3; tick(); tick(); tick(); }
         P[I] = true;
                               /*   NMI    Reset    IRQ     BRK  */
         constexpr u16 vect[] = { 0xFFFA, 0xFFFC, 0xFFFE, 0xFFFE };
         PC = rd16(vect[t]);
         if (t == NMI) nmi = false;
     };
-    void NOP() { T; };
+    void NOP() { tick(); };
 
     /// Execute a CPU instruction.
     void exec();

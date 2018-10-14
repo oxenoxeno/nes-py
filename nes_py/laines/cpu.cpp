@@ -24,6 +24,8 @@ CPU::CPU(CPU* cpu) {
     irq = cpu->irq;
 }
 
+void CPU::tick() { ppu->step(); ppu->step(); ppu->step(); remainingCycles--; }
+
 // TODO: remove this and just use initializer?
 void CPU::power() {
     remainingCycles = 0;
@@ -95,13 +97,16 @@ template<bool is_write> u8 CPU::access(u16 addr, u8 v) {
 
 template<Mode m> void CPU::st(u8& r) {
     if (r == A && m == &CPU::izy) {
-        T; wr(_izy(), A);
+        tick();
+        wr(_izy(), A);
     }
     if (r == A && m == &CPU::abx) {
-        T; wr( abs() + X, A);
+        tick();
+        wr( abs() + X, A);
     }
     if (r == A && m == &CPU::aby) {
-        T; wr( abs() + Y, A);
+        tick();
+        wr( abs() + Y, A);
     }
     else {
         wr((this->*m)(), r);
@@ -111,10 +116,11 @@ template<Mode m> void CPU::st(u8& r) {
 void CPU::tr(u8& s, u8& d) {
     if (s == X && d == S) {
         S = X;
-        T;
+        tick();
     }
     else {
-        upd_nz(d = s); T;
+        upd_nz(d = s);
+        tick();
     }
 }
 
