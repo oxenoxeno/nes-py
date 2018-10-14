@@ -167,8 +167,6 @@ namespace PPU {
         /// Initialize a new PPU as a copy of another PPU.
         _PPU(_PPU* ppu);
 
-        ~_PPU() { };
-
         /// Set the PPU to the given mirroring mode.
         void set_mirroring(Mirroring mode) { mirroring = mode; };
 
