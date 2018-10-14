@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstring>
 #include "common.hpp"
+#include "nes.hpp"
 
 /// An abstract base class for a Mapper module on a Cartridge
 class Mapper {

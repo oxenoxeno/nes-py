@@ -4,10 +4,8 @@
 #include <iostream>
 #include "common.hpp"
 #include "cpu_flags.hpp"
-#include "joypad.hpp"
-#include "cartridge.hpp"
-class PPU;
-#include "ppu.hpp"
+class NES;
+#include "nes.hpp"
 
 class CPU;
 /// the addressing mode as a callable function
@@ -31,14 +29,8 @@ private:
     /// non-mask-able interrupt and interrupt request flag
     bool nmi, irq;
 
-    /// the PPU for calculating graphics
-    PPU* ppu;
-
-    /// the joy-pad to get input data from
-    Joypad* joypad;
-
-    /// the cartridge to get game data from
-    Cartridge* cartridge;
+    /// the NES this CPU belongs to
+    NES* nes;
 
     /**
         The total number of CPU cycle per emulated frame.
@@ -185,39 +177,11 @@ public:
     /// Initialize a new CPU State as a copy of another
     CPU(CPU* cpu);
 
-    /**
-        Set the local PPU to a new value
+    /// Set the NES for this PPU
+    void set_nes(NES* new_nes) { nes = new_nes; };
 
-        @param new_ppu the PPU pointer to replace the existing pointer
-    */
-    void set_ppu(PPU* new_ppu)  { ppu = new_ppu; };
-
-    /**
-        Return a pointer to this CPU's PPU object.
-
-        @returns a pointer to the CPU's PPU
-    */
-    PPU* get_ppu() { return ppu; };
-
-    /**
-        Set the local joy-pad to a new value
-
-        @param new_joypad the joy-pad pointer to replace the existing pointer
-    */
-    void set_joypad(Joypad* new_joypad) { joypad = new_joypad; };
-
-    /**
-        Return a pointer to this CPU's joy-pad object.
-
-        @returns a pointer to the CPU's joy-pad
-    */
-    Joypad* get_joypad() { return joypad; };
-
-    /// Set the Cartridge instance pointer to a new value.
-    void set_cartridge(Cartridge* new_cartridge) { cartridge = new_cartridge; };
-
-    /// Return the pointer to this PPU's Cartridge instance
-    Cartridge* get_cartridge() { return cartridge; };
+    /// Get the NES for this PPU
+    NES* get_nes() { return nes; };
 
     /**
         Return the value of the given memory address.

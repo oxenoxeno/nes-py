@@ -1,4 +1,3 @@
-#include "ppu.hpp"
 #include "mapper.hpp"
 
 Mapper::Mapper(u8* rom) : rom(rom) {

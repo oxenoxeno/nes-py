@@ -1,3 +1,5 @@
+#pragma once
+class Cartridge;
 #include "cartridge.hpp"
 #include "gui.hpp"
 #include "joypad.hpp"

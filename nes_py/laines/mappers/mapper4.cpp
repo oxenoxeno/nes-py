@@ -1,5 +1,3 @@
-#include "cpu.hpp"
-#include "ppu.hpp"
 #include "mappers/mapper4.hpp"
 
 void Mapper4::apply() {

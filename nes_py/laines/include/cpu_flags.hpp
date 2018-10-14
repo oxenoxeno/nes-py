@@ -1,3 +1,4 @@
+#pragma once
 
 /// Processor flags
 enum Flag {C, Z, I, D, V, N};

@@ -2,9 +2,8 @@
 #include <iostream>
 #include <cstring>
 #include "common.hpp"
-#include "gui.hpp"
-#include "cartridge.hpp"
-#include "cpu.hpp"
+class NES;
+#include "nes.hpp"
 #include "palette.inc"
 
 /// Scanline configuration options
@@ -149,11 +148,8 @@ private:
     int scanline, dot;
     bool frameOdd;
 
-    /// the GUI this PPU has access to
-    GUI* gui;
-
-    /// the cartridge this PPU uses for game data
-    Cartridge* cartridge;
+    /// the NES this CPU belongs to
+    NES* nes;
 
 public:
     /// Initialize a new PPU.
@@ -162,11 +158,11 @@ public:
     /// Initialize a new PPU as a copy of another PPU.
     PPU(PPU* ppu);
 
-    void set_gui(GUI* new_gui) { gui = new_gui; };
-    GUI* get_gui() { return gui; };
+    /// Set the NES for this PPU
+    void set_nes(NES* new_nes) { nes = new_nes; };
 
-    void set_cartridge(Cartridge* new_cartridge) { cartridge = new_cartridge; };
-    Cartridge* get_cartridge() { return cartridge; };
+    /// Get the NES for this PPU
+    NES* get_nes() { return nes; };
 
     /// Set the PPU to the given mirroring mode.
     void set_mirroring(Mirroring mode) { mirroring = mode; };

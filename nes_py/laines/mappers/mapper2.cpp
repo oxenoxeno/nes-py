@@ -1,4 +1,3 @@
-#include "ppu.hpp"
 #include "mappers/mapper2.hpp"
 
 /* Based off of https://wiki.nesdev.com/w/index.php/UxROM */
