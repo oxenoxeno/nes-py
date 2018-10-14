@@ -4,7 +4,6 @@
 #include <iostream>
 #include "common.hpp"
 #include "cpu_flags.hpp"
-class NES;
 #include "nes.hpp"
 
 class CPU;

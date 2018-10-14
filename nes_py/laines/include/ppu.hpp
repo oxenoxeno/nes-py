@@ -2,7 +2,6 @@
 #include <iostream>
 #include <cstring>
 #include "common.hpp"
-class NES;
 #include "nes.hpp"
 
 /// Scanline configuration options
