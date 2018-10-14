@@ -1,13 +1,13 @@
 #include <string>
-#include "gamestate.hpp"
+#include "nes.hpp"
 
 /// An abstraction of an NES environment for OpenAI Gym
 class NESEnv {
 private:
-    /// the current gamestate being emulated
-    GameState* current_state;
-    /// the backup gamestate to restore to
-    GameState* backup_state;
+    /// the current NES being emulated
+    NES* current;
+    /// the backup NES to restore to
+    NES* backup;
 
 public:
 
@@ -20,7 +20,7 @@ public:
     NESEnv(wchar_t* path);
 
     /// Reset the emulator to its initial state.
-    void reset();
+    void reset() { current->power(); };
 
     /**
         Perform a discrete "step" of the NES by rendering 1 frame.
@@ -39,9 +39,10 @@ public:
     */
     void step(unsigned char action);
 
-    /// Backup the game state to the backup.
+    /// Backup the game state to the backup NES.
     void backup();
 
-    /// Restore the gamestate from the backup.
+    /// Restore the game state from the backup NES.
     void restore();
+
 };
