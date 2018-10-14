@@ -6,13 +6,12 @@
 #include "cpu_flags.hpp"
 #include "nes.hpp"
 
-class CPU;
-/// the addressing mode as a callable function
-typedef u16 (CPU::*Mode)(void);
-
 /// The CPU (MOS6502) for the NES
 class CPU {
 private:
+
+    /// the addressing mode as a callable function
+    typedef u16 (CPU::*Mode)(void);
 
     // Interrupt type
     enum IntType { NMI, RESET, IRQ, BRK };
@@ -78,7 +77,23 @@ private:
 
     /* MARK: STx */
 
-    template<Mode m> void st(u8& r);
+    template<Mode m> void st(u8& r) {
+        if (r == A && m == &CPU::izy) {
+            tick();
+            wr(_izy(), A);
+        }
+        if (r == A && m == &CPU::abx) {
+            tick();
+            wr(abs() + X, A);
+        }
+        if (r == A && m == &CPU::aby) {
+            tick();
+            wr(abs() + Y, A);
+        }
+        else {
+            wr((this->*m)(), r);
+        }
+    };
 
     #define G u16 a = (this->*m)(); u8 p = rd(a)  /* Fetch parameter */
 
@@ -119,7 +134,13 @@ private:
 
     /* MARK: Txx (move values between registers) */
 
-    void tr(u8& s, u8& d);
+    void tr(u8& s, u8& d) {
+        if (s == X && d == S)
+            S = X;
+        else
+            upd_nz(d = s);
+        tick();
+    };
 
     /* MARK: Stack operations */
 

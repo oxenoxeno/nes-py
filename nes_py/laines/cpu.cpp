@@ -88,32 +88,6 @@ template<bool is_write> u8 CPU::access(u16 addr, u8 v) {
     return 0;
 }
 
-template<Mode m> void CPU::st(u8& r) {
-    if (r == A && m == &CPU::izy) {
-        tick();
-        wr(_izy(), A);
-    }
-    if (r == A && m == &CPU::abx) {
-        tick();
-        wr(abs() + X, A);
-    }
-    if (r == A && m == &CPU::aby) {
-        tick();
-        wr(abs() + Y, A);
-    }
-    else {
-        wr((this->*m)(), r);
-    }
-}
-
-void CPU::tr(u8& s, u8& d) {
-    if (s == X && d == S)
-        S = X;
-    else
-        upd_nz(d = s);
-    tick();
-}
-
 void CPU::exec() {
     // Fetch the opcode and switch over it
     switch (rd(PC++)) {
