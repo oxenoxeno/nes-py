@@ -3,10 +3,10 @@
 NES::NES(const char* file_name){
     joypad = new Joypad();
     gui = new GUI();
-    cpu = new CPU();
-    cpu->set_nes(this);
     ppu = new PPU();
     ppu->set_nes(this);
+    cpu = new CPU();
+    cpu->set_nes(this);
     cartridge = new Cartridge(file_name, this);
     cpu->power();
 }
