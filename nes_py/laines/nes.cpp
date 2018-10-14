@@ -35,3 +35,9 @@ NES::~NES() {
     delete ppu;
     delete cpu;
 }
+
+/// Reset the machine
+void NES::power() { cpu->power(); ppu->reset(); };
+
+/// Run a frame on the machine
+void NES::run_frame() { cpu->run_frame(); };

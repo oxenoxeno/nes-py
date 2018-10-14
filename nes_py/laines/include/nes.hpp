@@ -3,7 +3,9 @@ class Cartridge;
 #include "cartridge.hpp"
 #include "gui.hpp"
 #include "joypad.hpp"
+class CPU;
 #include "cpu.hpp"
+class PPU;
 #include "ppu.hpp"
 
 /// an instance of NES hardware
@@ -65,9 +67,9 @@ public:
     void set_cpu(CPU* new_cpu) { cpu = new_cpu; };
 
     /// Reset the machine
-    void power() { cpu->power(); ppu->reset(); };
+    void power();
 
     /// Run a frame on the machine
-    void run_frame() { cpu->run_frame(); };
+    void run_frame();
 
 };
