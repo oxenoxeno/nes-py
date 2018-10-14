@@ -34,17 +34,17 @@ extern "C" {
 
     /// The getter for RAM access
     exp u8 NESEnv_read_mem(NESEnv* env, u16 address) {
-        return CPU::read_mem(address);
+        return env->get_nes()->get_cpu()->read_mem(address);
     }
 
     /// The setter for RAM access
     exp void NESEnv_write_mem(NESEnv* env, u16 address, u8 value) {
-        CPU::write_mem(address, value);
+        env->get_nes()->get_cpu()->write_mem(address, value);
     }
 
     /// Copy the screen of the emulator to an output buffer (NumPy array)
     exp void NESEnv_screen(NESEnv* env, unsigned char *output_buffer) {
-        PPU::get_gui()->copy_screen(output_buffer);
+        env->get_nes()->get_gui()->copy_screen(output_buffer);
     }
 
     /// The function to reset the environment.

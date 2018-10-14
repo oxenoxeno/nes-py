@@ -20,6 +20,9 @@ public:
     */
     NESEnv(wchar_t* path);
 
+    /// Return the pointer to the NES instance of this object
+    NES* get_nes() { return current_nes; };
+
     /// Reset the emulator to its initial state.
     void reset();
 
