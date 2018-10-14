@@ -81,7 +81,7 @@ private:
 
     template<Mode m> void st(u8& r);
 
-    #define G  u16  a = (this->*m)(); u8 p = rd(a)  /* Fetch parameter */
+    #define G u16 a = (this->*m)(); u8 p = rd(a)  /* Fetch parameter */
 
     template<Mode m> void ld(u8& r)  { G; upd_nz(r = p);                  };  // LDx
     template<Mode m> void cmp(u8& r) { G; upd_nz(r - p); P[C] = (r >= p); };  // CMP, CPx
