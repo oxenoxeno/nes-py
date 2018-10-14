@@ -5,6 +5,8 @@
 /// An abstraction of an NES environment for OpenAI Gym
 class NESEnv {
 private:
+    /// the path to the ROM for the NES Env
+    std::string rom_path;
     /// the current NES being emulated
     NES* current_nes;
     /// the backup NES to restore to

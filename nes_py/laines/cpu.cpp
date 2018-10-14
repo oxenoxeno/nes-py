@@ -1,10 +1,12 @@
 #include "cpu.hpp"
 
 CPU::CPU() {
+    remainingCycles = 0;
     P.set(0x04);
     A = X = Y = S = 0x00;
     memset(ram, 0xFF, sizeof(ram));
     nmi = irq = false;
+    INT<RESET>();
 }
 
 CPU::CPU(CPU* cpu) {
@@ -25,18 +27,6 @@ CPU::CPU(CPU* cpu) {
 }
 
 void CPU::tick() { nes->get_ppu()->step(); nes->get_ppu()->step(); nes->get_ppu()->step(); remainingCycles--; }
-
-// TODO: remove this and just use initializer?
-void CPU::power() {
-    remainingCycles = 0;
-
-    P.set(0x04);
-    A = X = Y = S = 0x00;
-    memset(ram, 0xFF, sizeof(ram));
-
-    nmi = irq = false;
-    INT<RESET>();
-}
 
 void CPU::run_frame() {
     remainingCycles += TOTAL_CYCLES;

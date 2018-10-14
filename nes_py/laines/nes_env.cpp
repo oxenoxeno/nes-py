@@ -3,15 +3,14 @@
 NESEnv::NESEnv(wchar_t* path) {
     // convert the wchar_t type to a string
     std::wstring ws_rom_path(path);
-    std::string rom_path(ws_rom_path.begin(), ws_rom_path.end());
-    // setup the NES emulator for the game
-    current_nes = new NES(rom_path.c_str());
+    this->rom_path = std::string(ws_rom_path.begin(), ws_rom_path.end());
     // set the backup state to NULL
     backup_nes = nullptr;
 }
 
 void NESEnv::reset() {
-    current_nes->power();
+    // setup the NES emulator for the game
+    current_nes = new NES(this->rom_path.c_str());
 }
 
 void NESEnv::step(unsigned char action) {

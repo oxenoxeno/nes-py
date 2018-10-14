@@ -156,6 +156,9 @@ private:
     };
     void NOP() { tick(); };
 
+    /// Execute a CPU instruction.
+    void exec();
+
 public:
     /// Initialize a new CPU State
     CPU();
@@ -202,12 +205,6 @@ public:
         @param v the value to set the flag to
     */
     void set_irq(bool v = true) { irq = v; };
-
-    /// Execute a CPU instruction.
-    void exec();
-
-    /// Turn on the CPU
-    void power();
 
     /// Run the CPU for roughly a frame
     void run_frame();

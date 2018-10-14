@@ -232,7 +232,4 @@ public:
     /// Execute a PPU cycle.
     void step();
 
-    /// Reset the PPU to a blank state.
-    void reset();
-
 };

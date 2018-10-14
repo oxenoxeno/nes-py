@@ -383,13 +383,3 @@ void PPU::step() {
         }
     }
 }
-
-void PPU::reset() {
-    frameOdd = false;
-    scanline = dot = 0;
-    ctrl.r = mask.r = status.r = 0;
-
-    memset(pixels, 0x00, sizeof(pixels));
-    memset(ciRam,  0xFF, sizeof(ciRam));
-    memset(oamMem, 0x00, sizeof(oamMem));
-}
