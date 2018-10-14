@@ -110,7 +110,6 @@ union Addr {
 /// an instance of the Picture Processing Unit (PPU)
 class PPU {
 private:
-
     /// the RGB palette
     u32 nesRgb[64] = {
         0x7C7C7C, 0x0000FC, 0x0000BC, 0x4428BC, 0x940084, 0xA80020, 0xA81000, 0x881400,
