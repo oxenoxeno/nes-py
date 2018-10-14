@@ -107,14 +107,11 @@ template<Mode m> void CPU::st(u8& r) {
 }
 
 void CPU::tr(u8& s, u8& d) {
-    if (s == X && d == S) {
+    if (s == X && d == S)
         S = X;
-        tick();
-    }
-    else {
+    else
         upd_nz(d = s);
-        tick();
-    }
+    tick();
 }
 
 void CPU::exec() {
