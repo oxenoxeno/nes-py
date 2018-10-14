@@ -14,7 +14,7 @@ public:
         tmpReg = mapper->tmpReg;
         std::copy(std::begin(mapper->regs), std::end(mapper->regs), std::begin(regs));
     };
-    Mapper1(u8* rom) : Mapper(rom) {
+    Mapper1(u8* rom, NES* nes) : Mapper(rom, nes) {
         regs[0] = 0x0C;
         writeN = tmpReg = regs[1] = regs[2] = regs[3] = 0;
         apply();

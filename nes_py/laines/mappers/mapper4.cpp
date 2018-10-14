@@ -29,7 +29,7 @@ void Mapper4::apply() {
         map_chr<2>(3, regs[1] >> 1);
     }
 
-    PPU::set_mirroring(horizMirroring ? HORIZONTAL : VERTICAL);
+    nes->get_ppu()->set_mirroring(horizMirroring ? HORIZONTAL : VERTICAL);
 }
 
 u8 Mapper4::write(u16 addr, u8 v) {
@@ -42,7 +42,7 @@ u8 Mapper4::write(u16 addr, u8 v) {
             case 0xA000:  horizMirroring = v & 1;           break;
             case 0xC000:  irqPeriod = v;                    break;
             case 0xC001:  irqCounter = 0;                   break;
-            case 0xE000:  CPU::set_irq(irqEnabled = false); break;
+            case 0xE000:  nes->get_cpu()->set_irq(irqEnabled = false); break;
             case 0xE001:  irqEnabled = true;                break;
         }
         apply();
@@ -61,5 +61,5 @@ void Mapper4::signal_scanline() {
         irqCounter--;
 
     if (irqEnabled && irqCounter == 0)
-        CPU::set_irq();
+        nes->get_cpu()->set_irq();
 }

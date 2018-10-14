@@ -1,11 +1,12 @@
 #include "mapper.hpp"
 
-Mapper::Mapper(u8* rom) : rom(rom) {
+Mapper::Mapper(u8* rom, NES* nes) : rom(rom) {
+    this->nes = nes;
     // Read infos from header:
     prgSize = rom[4] * 0x4000;
     chrSize = rom[5] * 0x2000;
     prgRamSize = rom[8] ? rom[8] * 0x2000 : 0x2000;
-    PPU::set_mirroring((rom[6] & 1) ? VERTICAL : HORIZONTAL);
+    nes->get_ppu()->set_mirroring((rom[6] & 1) ? VERTICAL : HORIZONTAL);
 
     prg = rom + 16;
     prgRam = new u8[prgRamSize];

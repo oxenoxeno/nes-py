@@ -13,7 +13,7 @@ public:
         vertical_mirroring = mapper->vertical_mirroring;
         PRG_size_16k = mapper->PRG_size_16k;
     };
-    Mapper3(u8* rom) : Mapper(rom) {
+    Mapper3(u8* rom, NES* nes) : Mapper(rom, nes) {
         PRG_size_16k = rom[4] == 1;
         vertical_mirroring = rom[6] & 0x01;
         regs[0] = 0;

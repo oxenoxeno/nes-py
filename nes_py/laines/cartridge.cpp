@@ -5,7 +5,7 @@
 #include "mappers/mapper3.hpp"
 #include "mappers/mapper4.hpp"
 
-Cartridge::Cartridge(const char* file_name) {
+Cartridge::Cartridge(const char* file_name, NES* nes) {
     // open the ROM file as a binary sequence
     FILE* f = fopen(file_name, "rb");
     // determine the size of the ROM file
@@ -20,11 +20,11 @@ Cartridge::Cartridge(const char* file_name) {
     int mapper_id = (rom[7] & 0xF0) | (rom[6] >> 4);
     // setup the new mapper
     switch (mapper_id) {
-        case 0:  this->mapper = new Mapper0(rom); break;
-        case 1:  this->mapper = new Mapper1(rom); break;
-        case 2:  this->mapper = new Mapper2(rom); break;
-        case 3:  this->mapper = new Mapper3(rom); break;
-        case 4:  this->mapper = new Mapper4(rom); break;
+        case 0:  this->mapper = new Mapper0(rom, nes); break;
+        case 1:  this->mapper = new Mapper1(rom, nes); break;
+        case 2:  this->mapper = new Mapper2(rom, nes); break;
+        case 3:  this->mapper = new Mapper3(rom, nes); break;
+        case 4:  this->mapper = new Mapper4(rom, nes); break;
     }
 }
 

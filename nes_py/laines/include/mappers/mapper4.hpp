@@ -21,7 +21,7 @@ public:
         irqCounter = mapper->irqCounter;
         irqEnabled = mapper->irqEnabled;
     };
-    Mapper4(u8* rom) : Mapper(rom) {
+    Mapper4(u8* rom, NES* nes) : Mapper(rom, nes) {
         for (int i = 0; i < 8; i++)
             regs[i] = 0;
 

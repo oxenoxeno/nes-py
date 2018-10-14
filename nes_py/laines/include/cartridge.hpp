@@ -1,6 +1,9 @@
 #pragma once
 #include <cstdio>
 #include "common.hpp"
+class NES;
+#include "nes.hpp"
+class Mapper;
 #include "mapper.hpp"
 
 /// an abstraction of a game cartridge.
@@ -15,7 +18,7 @@ public:
 
         @param file_name the name of the file to load the ROM from
     */
-    Cartridge(const char* file_name);
+    Cartridge(const char* file_name, NES* nes);
 
     /// Initialize a cartridge as a copy of another
     Cartridge(Cartridge* cart);
@@ -31,4 +34,5 @@ public:
 
     /// CHR-ROM/RAM access
     template <bool wr> u8 chr_access(u16 addr, u8 v = 0);
+
 };

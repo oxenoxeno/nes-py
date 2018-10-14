@@ -12,7 +12,7 @@ public:
         std::copy(std::begin(mapper->regs), std::end(mapper->regs), std::begin(regs));
         vertical_mirroring = mapper->vertical_mirroring;
     };
-    Mapper2(u8* rom) : Mapper(rom) {
+    Mapper2(u8* rom, NES* nes) : Mapper(rom, nes) {
         regs[0] = 0;
         vertical_mirroring = rom[6] & 0x01;
         apply();

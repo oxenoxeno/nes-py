@@ -1,7 +1,7 @@
 #include "nes.hpp"
 
 NES::NES(const char* file_name){
-    cartridge = new Cartridge(const char* file_name);
+    cartridge = new Cartridge(const char* file_name, this);
     joypad = new Joypad();
     gui = new GUI();
     ppu = new PPU();

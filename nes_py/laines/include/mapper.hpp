@@ -2,9 +2,11 @@
 #include <iostream>
 #include <cstring>
 #include "common.hpp"
+#include "nes.hpp"
 
 /// An abstract base class for a Mapper module on a Cartridge
 class Mapper {
+private:
     /// the ROM this mapper is loading from
     u8* rom;
     /// the size of the ROM in bytes
@@ -13,6 +15,9 @@ class Mapper {
     bool chrRam = false;
 
 protected:
+    /// the NES this mapper is connected to
+    NES* nes;
+
     u32 prgMap[4];
     u32 chrMap[8];
 
@@ -24,7 +29,7 @@ protected:
 
 public:
     Mapper() { };
-    Mapper(u8* rom);
+    Mapper(u8* rom, NES* nes);
     Mapper(Mapper* mapper);
     virtual Mapper* copy();
     virtual ~Mapper();
