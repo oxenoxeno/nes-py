@@ -22,6 +22,9 @@ public:
     */
     NESEnv(wchar_t* path);
 
+    /// Delete an instance of NES Env
+    ~NESEnv() { delete backup_nes; delete current_nes; }
+
     /// Return the pointer to the NES instance of this object
     NES* get_nes() { return current_nes; };
 
