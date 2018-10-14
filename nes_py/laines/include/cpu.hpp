@@ -40,20 +40,6 @@ private:
     /// Remaining clocks to end frame
     int remainingCycles;
 
-    /**
-        Set the non-maskable interrupt flag.
-
-        @param v the value to set the flag to
-    */
-    void set_nmi(bool v = true) { nmi = v; };
-
-    /**
-        Set the interrupt request flag.
-
-        @param v the value to set the flag to
-    */
-    void set_irq(bool v = true) { irq = v; };
-
     /// Perform a single CPU cycle, i.e., one clock tick
     void tick();
 
@@ -202,6 +188,20 @@ public:
 
     */
     void write_mem(u16 address, u8 value) { ram[address % 0x800] = value; };
+
+    /**
+        Set the non-maskable interrupt flag.
+
+        @param v the value to set the flag to
+    */
+    void set_nmi(bool v = true) { nmi = v; };
+
+    /**
+        Set the interrupt request flag.
+
+        @param v the value to set the flag to
+    */
+    void set_irq(bool v = true) { irq = v; };
 
     /// Execute a CPU instruction.
     void exec();
