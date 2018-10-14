@@ -15,17 +15,15 @@ public:
     GUI* gui;
     /// the PPU for the game-state
     PPU* ppu;
-    /// the state for the CPU
-    CPUState* cpu_state;
+    /// the CPU for the game-state
+    CPU* cpu;
 
     /// Initialize a new game-state
-    GameState();
-    /// Delete a game-state
-    ~GameState();
+    GameState() { };
     /// create a new game-state as a copy of another
     GameState(GameState* state);
-    /// create a new game-state as a copy of another with different states
-    GameState(GameState* state, CPUState* new_cpu_state);
+    /// Delete a game-state
+    ~GameState();
     /// Load the game-state's data into the machine
     void load();
 };
