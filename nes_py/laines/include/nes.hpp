@@ -24,9 +24,6 @@ private:
 
 public:
 
-    /// Initialize a new NES
-    NES() { };
-
     /// Initialize a new NES with a cartridge
     NES(const char* file_name);
 
