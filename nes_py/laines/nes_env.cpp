@@ -6,9 +6,12 @@ NESEnv::NESEnv(wchar_t* path) {
     this->rom_path = std::string(ws_rom_path.begin(), ws_rom_path.end());
     // set the backup state to NULL
     backup_nes = nullptr;
+    current_nes = nullptr;
 }
 
 void NESEnv::reset() {
+    // delete the old NES if there was one
+    delete current_nes;
     // setup the NES emulator for the game
     current_nes = new NES(this->rom_path.c_str());
 }
