@@ -17,7 +17,7 @@ void NESEnv::step(unsigned char action) {
     // write the action to the player's joy-pad
     current_nes->get_joypad()->write_buttons(0, action);
     // run a frame on the CPU
-    current_nes->run_frame();
+    current_nes->get_cpu()->run_frame();
 }
 
 void NESEnv::backup() {

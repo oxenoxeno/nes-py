@@ -63,7 +63,4 @@ public:
     /// Set the CPU for the NES
     void set_cpu(CPU* new_cpu) { cpu = new_cpu; };
 
-    /// Run a frame on the machine
-    void run_frame();
-
 };
