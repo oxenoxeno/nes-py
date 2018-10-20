@@ -20,6 +20,8 @@ struct CPUState {
     Flags P;
     /// non-mask-able interrupt and interrupt request flag
     bool nmi, irq;
+    /// the number of remaining cycles
+    int remainingCycles;
 
     /// Initialize a new CPU State
     CPUState() {
@@ -27,6 +29,7 @@ struct CPUState {
         A = X = Y = S = 0x00;
         memset(ram, 0xFF, sizeof(ram));
         nmi = irq = false;
+        remainingCycles = 0;
     }
 
     /// Initialize a new CPU State as a copy of another
@@ -45,6 +48,8 @@ struct CPUState {
         // copy the interrupt flags
         nmi = state->nmi;
         irq = state->irq;
+        // get the number of remaining cycles
+        remainingCycles = state->remainingCycles;
     }
 };
 

@@ -320,6 +320,8 @@ namespace CPU {
         // copy the interrupt flags
         state->nmi = nmi;
         state->irq = irq;
+        // copy the number of remaining cycles
+        state->remainingCycles = remainingCycles;
 
         return state;
     }
@@ -339,5 +341,7 @@ namespace CPU {
         // copy the interrupt flags
         nmi = state->nmi;
         irq = state->irq;
+        // copy the number of remaining cycles
+        remainingCycles = state->remainingCycles;
     }
 }
