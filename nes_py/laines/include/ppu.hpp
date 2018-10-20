@@ -234,14 +234,10 @@ namespace PPU {
     Cartridge* get_cartridge();
 
     template <bool write> u8 access(u16 index, u8 v = 0);
-
     void set_ppu(_PPU* new_ppu);
 
     void step();
-
     void reset();
 
-    /// Set the PPU to the given mirroring mode.
     void set_mirroring(Mirroring mode);
-
 }
